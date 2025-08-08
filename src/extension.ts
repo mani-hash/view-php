@@ -216,6 +216,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Stack for @if
     const ifStack: number[] = [];
+    
+    // Stack for @foreach
+    const forStack: number[] = [];
+
     // Stack for component tags -> store {name, line, character}
     const compStack: Array<{ name: string; line: number; char: number }> = [];
 
@@ -229,15 +233,28 @@ export function activate(context: vscode.ExtensionContext) {
       if (/\@elseif\b/.test(line)) {
         if (ifStack.length === 0) {
           const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-          diagnostics.push(new vscode.Diagnostic(range, '`@elseif` without matching `@if`', vscode.DiagnosticSeverity.Warning));
+          diagnostics.push(new vscode.Diagnostic(range, '`@elseif` without matching `@if`', vscode.DiagnosticSeverity.Error));
         }
       }
       if (/\@endif\b/.test(line)) {
         if (ifStack.length === 0) {
           const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-          diagnostics.push(new vscode.Diagnostic(range, '`@endif` without matching `@if`', vscode.DiagnosticSeverity.Warning));
+          diagnostics.push(new vscode.Diagnostic(range, '`@endif` without matching `@if`', vscode.DiagnosticSeverity.Error));
         } else {
           ifStack.pop();
+        }
+      }
+
+      if (/\@foreach\b/.test(line)) {
+        forStack.push(i);
+      }
+
+      if (/\@endforeach\b/.test(line)) {
+        if (forStack.length === 0) {
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
+          diagnostics.push(new vscode.Diagnostic(range, '@endforeach without matching @foreach', vscode.DiagnosticSeverity.Error));
+        } else {
+          forStack.pop();
         }
       }
 
