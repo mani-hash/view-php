@@ -240,11 +240,25 @@ export function activate(context: vscode.ExtensionContext) {
     // Stack for @foreach
     const forStack: number[] = [];
 
+    let extendCount: number = 0;
+
+    // Stack for @section
+    const sectionStack: number[] = [];
+
     // Stack for component tags -> store {name, line, character}
     const compStack: Array<{ name: string; line: number; char: number }> = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+
+      if (/\@extends\b/.test(line)) {
+        extendCount += 1;
+
+        if (extendCount > 1) {
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
+          diagnostics.push(new vscode.Diagnostic(range, '`Only one @extends is allowed per file`', vscode.DiagnosticSeverity.Error));
+        }
+      }
 
       // handle @if / @elseif / @endif
       if (/\@if\b/.test(line)) {
@@ -275,6 +289,19 @@ export function activate(context: vscode.ExtensionContext) {
           diagnostics.push(new vscode.Diagnostic(range, '@endforeach without matching @foreach', vscode.DiagnosticSeverity.Error));
         } else {
           forStack.pop();
+        }
+      }
+      
+      if (/\@section\b/.test(line)) {
+        sectionStack.push(i);
+      }
+
+      if (/\@endsection\b/.test(line)) {
+        if (sectionStack.length === 0) {
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
+          diagnostics.push(new vscode.Diagnostic(range, '@endsection without matching @section', vscode.DiagnosticSeverity.Error));
+        } else {
+          sectionStack.pop();
         }
       }
 
