@@ -59,15 +59,15 @@ export function activate(context: vscode.ExtensionContext) {
         // We try to find the fragment immediately before the cursor matching "<c-[\w\-.]*"
         const m = prefix.match(/<c-([\w.\-]*)$/);
         if (!m) {
-			return undefined;
-		}
+          return undefined;
+        }
         const typed = m[1]; // e.g. "nav.b" or "nav-"
 
         // Resolve workspace root
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!root) {
-			return undefined;
-		}
+          return undefined;
+        }
 
         // Compute dir we are inside - support dot or hyphen
         const parts = typed.split(/[\.-]/).filter(Boolean);
@@ -81,8 +81,8 @@ export function activate(context: vscode.ExtensionContext) {
           // fallback: list root components folder
           const fallback = path.join(root, COMPONENTS_DIR);
           if (!fs.existsSync(fallback)) {
-			return undefined;
-		  }
+            return undefined;
+          }
           return buildCompletionItemsFromDir(fallback, typed);
         }
 
@@ -99,13 +99,13 @@ export function activate(context: vscode.ExtensionContext) {
       provideHover(document: vscode.TextDocument, position: vscode.Position) {
         const range = document.getWordRangeAtPosition(position, /c-[\w.\-]+/);
         if (!range) {
-			return undefined;
-		}
+          return undefined;
+        }
         const tag = document.getText(range);
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!root) {
-			return undefined;
-		}
+          return undefined;
+        }
 
         const compPath = tag.replace(/^c-/, '').replace(/[.\-]/g, path.sep);
         const full = path.join(root, COMPONENTS_DIR, compPath + '.view.php');
@@ -129,13 +129,13 @@ export function activate(context: vscode.ExtensionContext) {
       provideDefinition(document: vscode.TextDocument, position: vscode.Position) {
         const range = document.getWordRangeAtPosition(position, /c-[\w.\-]+/);
         if (!range) {
-			return null;
-		}
+          return null;
+        }
         const tag = document.getText(range);
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (!root) {
-			return null;
-		}
+          return null;
+        }
 
         const compPath = tag.replace(/^c-/, '').replace(/[.\-]/g, path.sep);
         const full = path.join(root, COMPONENTS_DIR, compPath + '.view.php');
@@ -207,8 +207,8 @@ export function activate(context: vscode.ExtensionContext) {
    */
   function checkDoc(doc: vscode.TextDocument) {
     if (doc.languageId !== 'php' || !doc.fileName.endsWith('.view.php')) {
-		return;
-	}
+      return;
+    }
 
     const diagnostics: vscode.Diagnostic[] = [];
     const text = doc.getText();
