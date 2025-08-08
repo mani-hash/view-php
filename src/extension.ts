@@ -21,45 +21,28 @@ export function activate(context: vscode.ExtensionContext) {
           // context checks
           const items: vscode.CompletionItem[] = [];
 
-          const ifSnippet = new vscode.CompletionItem('if', vscode.CompletionItemKind.Snippet);
-          ifSnippet.insertText = new vscode.SnippetString('@if (${1:condition})\n\t$0\n@endif');
-          ifSnippet.detail = 'ViewPHP @if ... @endif';
-          items.push(ifSnippet);
+          function makeSnippet(label: string, body: string, detail: string): vscode.CompletionItem {
+            const item = new vscode.CompletionItem(label, vscode.CompletionItemKind.Snippet);
+            item.insertText = new vscode.SnippetString(body);
+            item.detail = detail;
+            item.range = document.getWordRangeAtPosition(position, new RegExp(`@?${label}`));
+            return item;
+          }
 
-          const forSnippet = new vscode.CompletionItem('foreach', vscode.CompletionItemKind.Snippet);
-          forSnippet.insertText = new vscode.SnippetString('@foreach (${1:condition})\n\t$0\n@endforeach');
-          forSnippet.detail = 'ViewPHP @foreach ... @endforeach';
-          items.push(forSnippet);
-
-          const sectionSnippet = new vscode.CompletionItem('section', vscode.CompletionItemKind.Snippet);
-          sectionSnippet.insertText = new vscode.SnippetString('@section(\'${1:value}\')\n\t$0\n@endsection');
-          sectionSnippet.detail = 'ViewPHP @section ... @endsection';
-          items.push(sectionSnippet);
-
-          const yieldSnippet = new vscode.CompletionItem('yield', vscode.CompletionItemKind.Snippet);
-          yieldSnippet.insertText = new vscode.SnippetString('@yield(\'${1:value}\')');
-          yieldSnippet.detail = 'ViewPHP @yield';
-          items.push(yieldSnippet);
-
-          const includeSnippet = new vscode.CompletionItem('include', vscode.CompletionItemKind.Snippet);
-          includeSnippet.insertText = new vscode.SnippetString('@include(\'${1:value}\')');
-          includeSnippet.detail = 'ViewPHP @include';
-          items.push(includeSnippet);
-
-          const extendSnippet = new vscode.CompletionItem('extends', vscode.CompletionItemKind.Snippet);
-          extendSnippet.insertText = new vscode.SnippetString('@extends(\'${1:value}\')');
-          extendSnippet.detail = 'ViewPHP @extends';
-          items.push(extendSnippet);
-
-          const componentSnippet = new vscode.CompletionItem('c-', vscode.CompletionItemKind.Snippet);
-          componentSnippet.insertText = new vscode.SnippetString('<c-${1:component} ${2:attr}="${3:value}">\n\t$0\n</c-${1:component}>');
-          componentSnippet.detail = 'ViewPHP component tag';
-          items.push(componentSnippet);
-
-          const interp = new vscode.CompletionItem('{{', vscode.CompletionItemKind.Snippet);
-          interp.insertText = new vscode.SnippetString('{{ ${1:expr} }}');
-          interp.detail = 'Interpolation';
-          items.push(interp);
+          items.push(
+            makeSnippet('if', '@if (${1:condition})\n\t$0\n@endif', 'ViewPHP @if ... @endif'),
+            makeSnippet('foreach', '@foreach (${1:condition})\n\t$0\n@endforeach', 'ViewPHP @foreach ... @endforeach'),
+            makeSnippet('section', '@section(\'${1:value}\')\n\t$0\n@endsection', 'ViewPHP @section ... @endsection'),
+            makeSnippet('yield', '@yield(\'${1:value}\')', 'ViewPHP @yield'),
+            makeSnippet('include', '@include(\'${1:value}\')', 'ViewPHP @include'),
+            makeSnippet('extends', '@extends(\'${1:value}\')', 'ViewPHP @extends'),
+            makeSnippet(
+              'c-',
+              '<c-${1:component} ${2:attr}="${3:value}">\n\t$0\n</c-${1:component}>',
+              'ViewPHP component tag'
+            ),
+            makeSnippet('{{', '{{ ${1:expr} }}', 'Interpolation')
+          );
 
           return items;
         }
