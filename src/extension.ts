@@ -31,6 +31,26 @@ export function activate(context: vscode.ExtensionContext) {
           forSnippet.detail = 'ViewPHP @foreach ... @endforeach';
           items.push(forSnippet);
 
+          const sectionSnippet = new vscode.CompletionItem('section', vscode.CompletionItemKind.Snippet);
+          sectionSnippet.insertText = new vscode.SnippetString('@section(\'${1:value}\')\n\t$0\n@endsection');
+          sectionSnippet.detail = 'ViewPHP @section ... @endsection';
+          items.push(sectionSnippet);
+
+          const yieldSnippet = new vscode.CompletionItem('yield', vscode.CompletionItemKind.Snippet);
+          yieldSnippet.insertText = new vscode.SnippetString('@yield(\'${1:value}\')');
+          yieldSnippet.detail = 'ViewPHP @yield';
+          items.push(yieldSnippet);
+
+          const includeSnippet = new vscode.CompletionItem('include', vscode.CompletionItemKind.Snippet);
+          includeSnippet.insertText = new vscode.SnippetString('@include(\'${1:value}\')');
+          includeSnippet.detail = 'ViewPHP @include';
+          items.push(includeSnippet);
+
+          const extendSnippet = new vscode.CompletionItem('extends', vscode.CompletionItemKind.Snippet);
+          extendSnippet.insertText = new vscode.SnippetString('@extends(\'${1:value}\')');
+          extendSnippet.detail = 'ViewPHP @extends';
+          items.push(extendSnippet);
+
           const componentSnippet = new vscode.CompletionItem('c-', vscode.CompletionItemKind.Snippet);
           componentSnippet.insertText = new vscode.SnippetString('<c-${1:component} ${2:attr}="${3:value}">\n\t$0\n</c-${1:component}>');
           componentSnippet.detail = 'ViewPHP component tag';
