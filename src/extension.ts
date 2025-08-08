@@ -26,6 +26,11 @@ export function activate(context: vscode.ExtensionContext) {
           ifSnippet.detail = 'ViewPHP @if ... @endif';
           items.push(ifSnippet);
 
+          const forSnippet = new vscode.CompletionItem('foreach', vscode.CompletionItemKind.Snippet);
+          forSnippet.insertText = new vscode.SnippetString('@foreach (${1:condition})\n\t$0\n@endforeach');
+          forSnippet.detail = 'ViewPHP @foreach ... @endforeach';
+          items.push(forSnippet);
+
           const componentSnippet = new vscode.CompletionItem('c-', vscode.CompletionItemKind.Snippet);
           componentSnippet.insertText = new vscode.SnippetString('<c-${1:component} ${2:attr}="${3:value}">\n\t$0\n</c-${1:component}>');
           componentSnippet.detail = 'ViewPHP component tag';
