@@ -1,0 +1,27 @@
+{
+  "scopeName": "text.viewphp.inject",
+  "injectionSelector": "L:source.php",
+  "patterns": [
+    {
+      "name": "keyword.control.viewphp",
+      "match": "@(if|elseif|else|endif|foreach|endforeach|section|endsection|yield|extends|include)\\b"
+    },
+    {
+      "name": "meta.interpolation.viewphp",
+      "begin": "\\{\\{",
+      "end": "\\}\\}",
+      "patterns": [
+        { "include": "source.php" }
+      ]
+    },
+    {
+      "name": "meta.component.open.viewphp",
+      "match": "<c-([a-zA-Z0-9_.\\-]+)(?=\\s|>)"
+    },
+    {
+      "name": "meta.component.close.viewphp",
+      "match": "<\\/c-([a-zA-Z0-9_.\\-]+)>"
+    }
+  ],
+  "repository": {}
+}
