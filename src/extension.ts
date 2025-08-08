@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (!m) {
           return undefined;
         }
-        const typed = m[1]; // e.g. "nav.b" or "nav-"
+        const typed = m[1]; // Ex: "nav.b"
 
         // Resolve workspace root
         const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -69,8 +69,8 @@ export function activate(context: vscode.ExtensionContext) {
           return undefined;
         }
 
-        // Compute dir we are inside - support dot or hyphen
-        const parts = typed.split(/[\.-]/).filter(Boolean);
+        // Compute dir we are inside
+        const parts = typed.split(/[\.]/).filter(Boolean);
         const last = parts.length ? parts[parts.length - 1] : '';
         const parentPath = path.join(root, COMPONENTS_DIR, ...parts.slice(0, -1));
 
