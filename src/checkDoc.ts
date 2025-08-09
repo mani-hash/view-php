@@ -61,10 +61,10 @@ export function checkDoc(doc: vscode.TextDocument) {
         if (/\@if\b/.test(line)) {
             ifStack.push(i);
         }
-        if (/\@elseif\b/.test(line)) {
+        if (/\@elseif\b/.test(line) || /\@else\b/.test(line)) {
             if (ifStack.length === 0) {
                 const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, originalLines[i].length));
-                diagnostics.push(new vscode.Diagnostic(range, '@elseif without matching @if', vscode.DiagnosticSeverity.Error));
+                diagnostics.push(new vscode.Diagnostic(range, `${/\@elseif\b/.test(line) ? "@elseif" : "@else"} without matching @if`, vscode.DiagnosticSeverity.Error));
             }
         }
         if (/\@endif\b/.test(line)) {
