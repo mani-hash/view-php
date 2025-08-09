@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { stripCommentsPreservePositions } from './helpers/stripCommentsPreservePositions';
 
 const COMPONENTS_DIR = path.join('resources', 'views', 'components');
 
@@ -215,87 +216,101 @@ export function activate(context: vscode.ExtensionContext) {
 
     const diagnostics: vscode.Diagnostic[] = [];
     const text = doc.getText();
-    const lines = text.split(/\r?\n/);
 
-    // Stack for @if
+    const cleaned = stripCommentsPreservePositions(text);
+    const lines = cleaned.split(/\r?\n/);
+    const originalLines = text.split(/\r?\n/);
+
+    // Stacks
     const ifStack: number[] = [];
-    
-    // Stack for @foreach
     const forStack: number[] = [];
-
-    let extendCount: number = 0;
-
-    // Stack for @section
     const sectionStack: number[] = [];
-
-    // Stack for component tags -> store {name, line, character}
     const compStack: Array<{ name: string; line: number; char: number }> = [];
+    let extendCount = 0;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
+      // @extends
       if (/\@extends\b/.test(line)) {
         extendCount += 1;
-
         if (extendCount > 1) {
-          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-          diagnostics.push(new vscode.Diagnostic(range, '`Only one @extends is allowed per file`', vscode.DiagnosticSeverity.Error));
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, originalLines[i].length));
+          diagnostics.push(new vscode.Diagnostic(range, 'Only one @extends is allowed per file', vscode.DiagnosticSeverity.Error));
         }
       }
 
-      // handle @if / @elseif / @endif
+      // @@ sequence — still flag if necessary (adjust message if you want)
+      if (/\@\@+/.test(line)) {
+        const match = line.match(/\@\@+/);
+        if (match) {
+          const start = match.index ?? 0;
+          const range = new vscode.Range(new vscode.Position(i, start), new vscode.Position(i, start + match[0].length));
+          diagnostics.push(new vscode.Diagnostic(range, 'Incorrect syntax (unexpected @@)', vscode.DiagnosticSeverity.Error));
+        }
+      }
+
+      // @if / @elseif / @endif
       if (/\@if\b/.test(line)) {
         ifStack.push(i);
       }
       if (/\@elseif\b/.test(line)) {
         if (ifStack.length === 0) {
-          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-          diagnostics.push(new vscode.Diagnostic(range, '`@elseif` without matching `@if`', vscode.DiagnosticSeverity.Error));
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, originalLines[i].length));
+          diagnostics.push(new vscode.Diagnostic(range, '@elseif without matching @if', vscode.DiagnosticSeverity.Error));
         }
       }
       if (/\@endif\b/.test(line)) {
         if (ifStack.length === 0) {
-          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
-          diagnostics.push(new vscode.Diagnostic(range, '`@endif` without matching `@if`', vscode.DiagnosticSeverity.Error));
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, originalLines[i].length));
+          diagnostics.push(new vscode.Diagnostic(range, '@endif without matching @if', vscode.DiagnosticSeverity.Error));
         } else {
           ifStack.pop();
         }
       }
 
+      // @foreach / @endforeach
       if (/\@foreach\b/.test(line)) {
         forStack.push(i);
       }
-
       if (/\@endforeach\b/.test(line)) {
         if (forStack.length === 0) {
-          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, originalLines[i].length));
           diagnostics.push(new vscode.Diagnostic(range, '@endforeach without matching @foreach', vscode.DiagnosticSeverity.Error));
         } else {
           forStack.pop();
         }
       }
-      
+
+      // @section / @endsection
       if (/\@section\b/.test(line)) {
         sectionStack.push(i);
       }
-
       if (/\@endsection\b/.test(line)) {
         if (sectionStack.length === 0) {
-          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, line.length));
+          const range = new vscode.Range(new vscode.Position(i, 0), new vscode.Position(i, originalLines[i].length));
           diagnostics.push(new vscode.Diagnostic(range, '@endsection without matching @section', vscode.DiagnosticSeverity.Error));
         } else {
           sectionStack.pop();
         }
       }
 
-      // scan for opening <c-...> tags (may have attributes)
-      const openRegex = /<c-([a-zA-Z0-9_.\-]+)(\s[^>]*)?>/g;
+      // Component tags:
+      // opening tag (handles attributes) and optional self-closing
+      const openRegex = /<c-([a-zA-Z0-9_.\-]+)(\s[^>]*?)?(\/\s*)?>/g;
       let m: RegExpExecArray | null;
       while ((m = openRegex.exec(line)) !== null) {
-        compStack.push({ name: m[1], line: i, char: m.index });
+        const full = m[0];
+        const name = m[1];
+        // if self-closing (ends with '/>' possibly with spaces) then ignore pushing
+        if (/[\/]\s*>$/.test(full)) {
+          // self-closed, nothing to do
+        } else {
+          compStack.push({ name, line: i, char: m.index });
+        }
       }
 
-      // scan for closing </c-...>
+      // closing tags
       const closeRegex = /<\/c-([a-zA-Z0-9_.\-]+)>/g;
       while ((m = closeRegex.exec(line)) !== null) {
         const closingName = m[1];
@@ -308,29 +323,42 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
         if (foundIndex === -1) {
-          // unmatched closing tag
           const range = new vscode.Range(new vscode.Position(i, m.index), new vscode.Position(i, m.index + m[0].length));
           diagnostics.push(new vscode.Diagnostic(range, `Unmatched closing component </c-${closingName}>`, vscode.DiagnosticSeverity.Warning));
         } else {
-          // pop everything up to foundIndex (treat as closed)
+          // pop the found open (assume proper nesting)
           compStack.splice(foundIndex, 1);
         }
       }
     }
 
-    // leftover ifStack entries -> unclosed if blocks
+    // leftover opens
     if (ifStack.length > 0) {
       for (const lineNo of ifStack) {
-        const lineText = lines[lineNo];
-        const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, lineText.length));
-        diagnostics.push(new vscode.Diagnostic(range, '`@if` without matching `@endif`', vscode.DiagnosticSeverity.Warning));
+        const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, originalLines[lineNo].length));
+        diagnostics.push(new vscode.Diagnostic(range, '@if without matching @endif', vscode.DiagnosticSeverity.Warning));
       }
     }
 
-    // leftover component stack -> unclosed components
+    if (forStack.length > 0) {
+      for (const lineNo of forStack) {
+        const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, originalLines[lineNo].length));
+        diagnostics.push(new vscode.Diagnostic(range, '@foreach without matching @endforeach', vscode.DiagnosticSeverity.Warning));
+      }
+    }
+
+    if (sectionStack.length > 0) {
+      for (const lineNo of sectionStack) {
+        const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, originalLines[lineNo].length));
+        diagnostics.push(new vscode.Diagnostic(range, '@section without matching @endsection', vscode.DiagnosticSeverity.Warning));
+      }
+    }
+
     for (const p of compStack) {
-      const lineText = lines[p.line] || '';
-      const range = new vscode.Range(new vscode.Position(p.line, p.char), new vscode.Position(p.line, Math.min(p.char + 30, lineText.length)));
+      const lineText = originalLines[p.line] || '';
+      const startChar = p.char;
+      const endChar = Math.min(startChar + 30, lineText.length);
+      const range = new vscode.Range(new vscode.Position(p.line, startChar), new vscode.Position(p.line, endChar));
       diagnostics.push(new vscode.Diagnostic(range, `Unclosed component <c-${p.name}>`, vscode.DiagnosticSeverity.Warning));
     }
 
