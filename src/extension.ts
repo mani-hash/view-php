@@ -205,8 +205,14 @@ export function activate(context: vscode.ExtensionContext) {
 
   /**
    * Check document for:
+   *  - more than one @extends
+   *  - component tag structure
    *  - unmatched @endif
    *  - @elseif without @if
+   *  - unmatched @section
+   *  - @endsection without @section
+   *  - unmatched @foreach
+   *  - @endforeach without @foreach
    *  - unclosed / mismatched <c-...> tags
    */
   function checkDoc(doc: vscode.TextDocument) {
@@ -240,7 +246,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
-      // @@ sequence — still flag if necessary (adjust message if you want)
+      // Consective @ symbols
       if (/\@\@+/.test(line)) {
         const match = line.match(/\@\@+/);
         if (match) {
@@ -295,8 +301,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
-      // Component tags:
-      // opening tag (handles attributes) and optional self-closing
+      // Component opening tag (handles attributes) and optional self-closing
       const openRegex = /<c-([a-zA-Z0-9_.\-]+)(\s[^>]*?)?(\/\s*)?>/g;
       let m: RegExpExecArray | null;
       while ((m = openRegex.exec(line)) !== null) {
@@ -310,7 +315,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
-      // closing tags
+      // Component closing tags
       const closeRegex = /<\/c-([a-zA-Z0-9_.\-]+)>/g;
       while ((m = closeRegex.exec(line)) !== null) {
         const closingName = m[1];
@@ -326,13 +331,13 @@ export function activate(context: vscode.ExtensionContext) {
           const range = new vscode.Range(new vscode.Position(i, m.index), new vscode.Position(i, m.index + m[0].length));
           diagnostics.push(new vscode.Diagnostic(range, `Unmatched closing component </c-${closingName}>`, vscode.DiagnosticSeverity.Warning));
         } else {
-          // pop the found open (assume proper nesting)
+          // pop the found open
           compStack.splice(foundIndex, 1);
         }
       }
     }
 
-    // leftover opens
+    // leftover if opens
     if (ifStack.length > 0) {
       for (const lineNo of ifStack) {
         const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, originalLines[lineNo].length));
@@ -340,6 +345,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
 
+    // leftover for opens
     if (forStack.length > 0) {
       for (const lineNo of forStack) {
         const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, originalLines[lineNo].length));
@@ -347,6 +353,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
 
+    // leftover section opens
     if (sectionStack.length > 0) {
       for (const lineNo of sectionStack) {
         const range = new vscode.Range(new vscode.Position(lineNo, 0), new vscode.Position(lineNo, originalLines[lineNo].length));
@@ -354,6 +361,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
 
+    // check for unclosed components
     for (const p of compStack) {
       const lineText = originalLines[p.line] || '';
       const startChar = p.char;
