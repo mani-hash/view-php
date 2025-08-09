@@ -3,15 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { stripCommentsPreservePositions } from './helpers/stripCommentsPreservePositions';
 import { buildCompletionItemsFromDir } from './helpers/buildCompletionItemsFromDir';
-
-const COMPONENTS_DIR = path.join('resources', 'views', 'components');
-
-/**
- * Document selector: strictly for PHP files with .view.php extension.
- */
-const selector: vscode.DocumentSelector = [
-  { language: 'php', scheme: 'file', pattern: '**/*.view.php' }
-];
+import { COMPONENTS_DIR, selector } from './base/constants';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('view-php extension activated');
