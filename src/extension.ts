@@ -1,9 +1,4 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import { stripCommentsPreservePositions } from './helpers/stripCommentsPreservePositions';
-import { buildCompletionItemsFromDir } from './helpers/buildCompletionItemsFromDir';
-import { COMPONENTS_DIR, selector } from './base/constants';
 import { snippetProvider } from './snippetProvider';
 import { completionProvider } from './completionProvider';
 import { hoverProvider } from './hoverProvider';
