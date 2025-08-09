@@ -81,9 +81,9 @@ export function stripCommentsPreservePositions(input: string): string {
             continue;
         }
 
-        // Hash-style line comment # ... (treat as comment if at start or after whitespace)
+        // Hash-style line comment #
         if (c === '#') {
-            // optional: ensure '#' is start-of-line or preceded by whitespace
+            // Ensure '#' is start-of-line or preceded by whitespace
             const prev = i - 1;
             if (prev < 0 || /\s/.test(input[prev])) {
                 let stop = input.indexOf('\n', i + 1);
