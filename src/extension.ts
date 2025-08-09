@@ -7,34 +7,10 @@ import { COMPONENTS_DIR, selector } from './base/constants';
 import { snippetProvider } from './snippetProvider';
 import { completionProvider } from './completionProvider';
 import { hoverProvider } from './hoverProvider';
+import { definitionProvider } from './definitionProvider';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('view-php extension activated');
-
-  // Definition provider (go to file)
-  const definitionProvider = vscode.languages.registerDefinitionProvider(
-    selector,
-    {
-      provideDefinition(document: vscode.TextDocument, position: vscode.Position) {
-        const range = document.getWordRangeAtPosition(position, /c-[\w.\-]+/);
-        if (!range) {
-          return null;
-        }
-        const tag = document.getText(range);
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (!root) {
-          return null;
-        }
-
-        const compPath = tag.replace(/^c-/, '').replace(/[.\-]/g, path.sep);
-        const full = path.join(root, COMPONENTS_DIR, compPath + '.view.php');
-        if (fs.existsSync(full)) {
-          return new vscode.Location(vscode.Uri.file(full), new vscode.Position(0, 0));
-        }
-        return null;
-      }
-    }
-  );
 
   // Diagnostics
   const diagCollection = vscode.languages.createDiagnosticCollection('viewphp');
