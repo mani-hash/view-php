@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { stripCommentsPreservePositions } from './helpers/stripCommentsPreservePositions';
+import { buildCompletionItemsFromDir } from './helpers/buildCompletionItemsFromDir';
 
 const COMPONENTS_DIR = path.join('resources', 'views', 'components');
 
@@ -172,36 +173,6 @@ export function activate(context: vscode.ExtensionContext) {
       checkDoc(doc);
     }
   });
-
-  // Helper functions
-
-  function buildCompletionItemsFromDir(dir: string, typedPrefix: string): vscode.CompletionItem[] {
-    try {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      const items: vscode.CompletionItem[] = [];
-
-      for (const e of entries) {
-        if (e.isDirectory()) {
-          // directory -> suggest folder name
-          const label = e.name;
-          const it = new vscode.CompletionItem(label, vscode.CompletionItemKind.Folder);
-          it.detail = 'component folder';
-          items.push(it);
-        } else if (e.isFile() && (e.name.endsWith('.view.php') || e.name.endsWith('.php'))) {
-          const base = e.name.replace(/\.view\.php$|\.php$/i, '');
-          const it = new vscode.CompletionItem(base, vscode.CompletionItemKind.File);
-          it.detail = 'component file';
-          // Insert only the remaining portion after last separator
-          it.insertText = base;
-          items.push(it);
-        }
-      }
-
-      return items;
-    } catch (err) {
-      return [];
-    }
-  }
 
   /**
    * Check document for:
