@@ -18,6 +18,9 @@ export const snippetProvider = vscode.languages.registerCompletionItemProvider(
 
             items.push(
                 makeSnippet('if', '@if (${1:condition})\n\t$0\n@endif', 'ViewPHP @if ... @endif'),
+                makeSnippet('if', '@if (${1:condition})\n\t$0\n@else \n\t$0\n@endif', 'ViewPHP @if .. @else .. @endif'),
+                makeSnippet('else', '@else \n\t$0', 'ViewPHP @else'),
+                makeSnippet('elseif', '@elseif (${1:condition})\n\t$0', 'ViewPHP @elseif'),
                 makeSnippet('foreach', '@foreach (${1:condition})\n\t$0\n@endforeach', 'ViewPHP @foreach ... @endforeach'),
                 makeSnippet('section', '@section(\'${1:value}\')\n\t$0\n@endsection', 'ViewPHP @section ... @endsection'),
                 makeSnippet('yield', '@yield(\'${1:value}\')', 'ViewPHP @yield'),
