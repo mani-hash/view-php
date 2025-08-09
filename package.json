@@ -3,6 +3,7 @@
   "displayName": "view-php",
   "description": "Syntax support for view.php files",
   "version": "1.0.0",
+  "publisher": "manimehalan",
   "engines": {
     "vscode": "^1.102.0"
   },
