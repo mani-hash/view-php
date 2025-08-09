@@ -4,6 +4,14 @@
   "description": "Syntax support for view.php files",
   "version": "1.0.0",
   "publisher": "manimehalan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mani-hash/view-php.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mani-hash/view-php/issues"
+  },
+  "homepage": "https://github.com/mani-hash/view-php#readme",
   "engines": {
     "vscode": "^1.102.0"
   },
