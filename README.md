@@ -40,4 +40,41 @@ List of known issues with this extension that may be improved upon later.
 
 ## Release Notes
 
+### Unreleased
+**Highlights**
+- Injection grammar now augments the built-in HTML+PHP grammar (no replacement), preserving PHP/HTML/JS/CSS intellisense while adding mini-Blade tokens like `@if`, `@foreach`, `{{ }}`, and `<c-...>`.
+- Component support improved:
+  - `<c-name ... />` self-closing components supported.
+  - Component completion that suggests files and folders under `resources/views/components`.
+  - Hover and Go-to-Definition open the component view directly.
+- Diagnostics added for unmatched `@if/@endif` and unclosed `<c-*>` tags.
+- Programmatic snippet provider added so snippets appear only for `*.view.php` files.
+
+---
+
+### 1.0.0 — Initial release (2025-08-09)
+**What’s included**
+- Basic support for mini-Blade styled templates in `.view.php` files:
+  - `{{ }}` interpolation with PHP tokenization,
+  - `@if / @elseif / @else / @endif`,
+  - `@foreach / @endforeach`,
+  - `@section / @endsection`, `@yield`, `@extends`, `@include`.
+- Component tags `<c-foo>...</c-foo>` and `<c-foo />` (self-closing).
+- Editor features:
+  - Syntax highlighting (injection into HTML+PHP),
+  - Completions for component paths,
+  - Hover information for components,
+  - Go-to-definition for component file,
+  - Diagnostics for common template errors.
+- Developer experience:
+  - `.vscode/launch.json` and `.vscode/tasks.json` for local development with `esbuild`.
+  - `vsce` packaging/publishing instructions included in repo.
+
+**Installation**
+- From Marketplace (coming soon): search `view-php` (publisher: `manimehalan`).
+- Or install locally:
+  ```bash
+  vsce package
+  code --install-extension view-php-1.0.0.vsix
+
 
